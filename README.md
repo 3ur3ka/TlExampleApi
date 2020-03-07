@@ -46,13 +46,8 @@ After that, go to the TrueLayer auth url e.g.
 
     https://auth.truelayer-sandbox.com/?response_type=code&client_id=<your-client-id>&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=https://localhost:5001/api/callback&providers=uk-ob-all%20uk-oauth-all%20uk-cs-mock
 
-Then you must request
-
-    https://localhost:5001/api/exchange
-
 Then you can call the following in any order
 
-    https://localhost:5001/api/accounts
     https://localhost:5001/api/transactions
     https://localhost:5001/api/aggregate
 
