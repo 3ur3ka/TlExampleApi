@@ -405,6 +405,9 @@ ASALocalRun/
 .localhistory/
 
 
+# Code coverage info
+TlApiExampleTests/Icov.info
+
 # App settings (see readme for more details)
 TlApiExample/appsettings.Development.json
 TlApiExample/appsettings.json

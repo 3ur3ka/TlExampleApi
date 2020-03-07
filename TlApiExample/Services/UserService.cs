@@ -36,8 +36,7 @@ namespace TlApiExample.Services
 
         public async Task<User> AuthenticateAsync(string username, string password)
         {
-
-            if (_users == null)
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 return null;
 
             var user = _users.SingleOrDefault(x => x.Username == username);
