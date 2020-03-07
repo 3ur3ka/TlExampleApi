@@ -77,12 +77,16 @@ namespace TlApiExample.Services
 
             string uri = _trueLayerCredentials.Value.BaseDataApiUrl + "/data/v1/accounts";
 
-            AccountsResponseDTO responseObj = (AccountsResponseDTO)await DoRequest<AccountsResponseDTO>(HttpMethod.Get, uri, true, null);
+            AccountsResponseDTO responseObj =
+                (AccountsResponseDTO)await DoRequest<AccountsResponseDTO>(HttpMethod.Get, uri, true, null);
 
             if (responseObj == null)
                 return false;
 
-            Cache cache = new Cache { AccountsResponseDTO = responseObj, ExchangeResponseDTO = _cacheService.GetCache().ExchangeResponseDTO };
+            Cache cache = new Cache {
+                AccountsResponseDTO = responseObj,
+                ExchangeResponseDTO = _cacheService.GetCache().ExchangeResponseDTO
+            };
 
             _cacheService.SetCache(cache);
 
@@ -117,19 +121,11 @@ namespace TlApiExample.Services
 
             accountsResponseDTO = _cacheService.GetCache().AccountsResponseDTO;
 
-            foreach (Account account in accountsResponseDTO.Accounts)
+            var tasks = accountsResponseDTO.Accounts.Select(i => GetAccount(i.AccountId, transactions));
+            await Task.WhenAll(tasks);
+
+            Cache cache = new Cache
             {
-                string uri = _trueLayerCredentials.Value.BaseDataApiUrl + "/data/v1/accounts/" + account.AccountId + "/transactions";
-
-                TransactionsResponseDTO responseObj = (TransactionsResponseDTO)await DoRequest<TransactionsResponseDTO>(HttpMethod.Get, uri, true, null);
-
-                if (responseObj == null)
-                    return false;
-
-                transactions.AddRange(responseObj.Transactions);
-            }
-
-            Cache cache = new Cache {
                 Transactions = transactions,
                 AccountsResponseDTO = _cacheService.GetCache().AccountsResponseDTO,
                 ExchangeResponseDTO = _cacheService.GetCache().ExchangeResponseDTO
@@ -187,7 +183,6 @@ namespace TlApiExample.Services
 
                 if (isAuthRequired)
                 {
-                    Console.WriteLine("setting bearer token");
                     client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", _cacheService.GetCache().ExchangeResponseDTO.AccessToken);
                 }
@@ -204,14 +199,12 @@ namespace TlApiExample.Services
                 }
                 else if (httpMethod == HttpMethod.Get)
                 {
-                    response = AsyncHelper.RunSync(() => client.GetAsync(uri));
+                    response = await client.GetAsync(uri);
                 }
-
-                Console.WriteLine(response);
 
                 if (response != null)
                 {
-                    
+
                     response.EnsureSuccessStatusCode();
                     var jsonString = await response.Content.ReadAsStringAsync();
 
@@ -222,6 +215,7 @@ namespace TlApiExample.Services
             }
             catch (Exception ex)
             {
+                // TODO: use the logging framework for this
                 Console.WriteLine("Error when trying to do api request: " + ex.Message);
             }
 
@@ -242,6 +236,20 @@ namespace TlApiExample.Services
                 return true;
 
             return false;
+        }
+
+        private async Task<bool> GetAccount(string accountId, List<Transaction> transactions)
+        {
+            string uri = _trueLayerCredentials.Value.BaseDataApiUrl + "/data/v1/accounts/" + accountId + "/transactions";
+
+            TransactionsResponseDTO responseObj = (TransactionsResponseDTO)await DoRequest<TransactionsResponseDTO>(HttpMethod.Get, uri, true, null);
+
+            if (responseObj == null)
+                return false;
+
+            transactions.AddRange(responseObj.Transactions);
+
+            return true;
         }
     }
 }

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using TlApiExample.Models;
@@ -15,19 +13,16 @@ namespace TlApiExample.Controllers
     public class TlApiController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ICacheService _cacheService;
         private readonly IHttpRequestService _httpRequestService;
 
         public TlApiController(
             IUserService userService,
-            IHttpContextAccessor httpContextAccessor,
             ICacheService cacheService,
             IHttpRequestService httpRequestService
         )
         {
             _userService = userService;
-            _httpContextAccessor = httpContextAccessor;
             _cacheService = cacheService;
             _httpRequestService = httpRequestService;
         }
@@ -46,7 +41,7 @@ namespace TlApiExample.Controllers
         }
 
         [HttpGet("callback")]
-        public IActionResult Get(string code)
+        public async Task<IActionResult> Callback(string code)
         {
             if (string.IsNullOrEmpty(code))
             {
@@ -55,16 +50,6 @@ namespace TlApiExample.Controllers
 
             StoreCode(code);
 
-            return Ok(new
-            {
-                message = $"Hello {_httpContextAccessor.HttpContext.User.Identity.Name}" +
-                $", thanks I got the code! The time is: {DateTime.Now}"
-            });
-        }
-
-        [HttpGet("exchange")]
-        public async Task<IActionResult> ExchangeAsync()
-        {
             bool result = await _httpRequestService.DoExchangeAsync();
 
             if (!result)
@@ -72,20 +57,10 @@ namespace TlApiExample.Controllers
                 return BadRequest(new { message = "Error trying to exchange code" });
             }
 
-            return Ok(new { message = "Exchanged Token" });
-        }
-
-        [HttpGet("accounts")]
-        public async Task<IActionResult> AccountsAsync()
-        {
-            bool result = await _httpRequestService.GetAccountsAsync();
-
-            if (!result)
+            return Ok(new
             {
-                return BadRequest(new { message = "Error trying to get accounts" });
-            }
-
-            return Ok(JsonConvert.SerializeObject(_cacheService.GetCache().AccountsResponseDTO));
+                message = "OK"
+            });
         }
 
         [HttpGet("transactions")]
