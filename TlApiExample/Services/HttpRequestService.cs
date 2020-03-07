@@ -38,6 +38,7 @@ namespace TlApiExample.Services
             _trueLayerCredentials = trueLayerCredentials;
         }
 
+        // Exchange the code for a jwt access token
         public async Task<bool> DoExchangeAsync()
         {
             Cache cache = _cacheService.GetCache();
@@ -68,9 +69,9 @@ namespace TlApiExample.Services
             return true;
         }
 
+        // Get the users accounts
         public async Task<bool> GetAccountsAsync()
         {
-
             if (!IsExchanged())
                 return false;
 
@@ -88,6 +89,7 @@ namespace TlApiExample.Services
             return true;
         }
 
+        // Get some transactions
         public async Task<bool> GetTransactionsAsync()
         {
             if (!IsExchanged())
@@ -113,6 +115,8 @@ namespace TlApiExample.Services
                     return false;
             }
 
+            accountsResponseDTO = _cacheService.GetCache().AccountsResponseDTO;
+
             foreach (Account account in accountsResponseDTO.Accounts)
             {
                 string uri = _trueLayerCredentials.Value.BaseDataApiUrl + "/data/v1/accounts/" + account.AccountId + "/transactions";
@@ -136,9 +140,9 @@ namespace TlApiExample.Services
             return true;
         }
 
+        // Get the transactions aggregated by category
         public async Task<bool> AggregateAsync()
         {
-
             if (!IsExchanged())
                 return false;
 
@@ -174,6 +178,7 @@ namespace TlApiExample.Services
             return true;
         }
 
+        // The main genericized request function
         public async Task<IResponse> DoRequest<TResponse>(HttpMethod httpMethod, string uri, bool isAuthRequired = false, IRequest request = null) where TResponse : IResponse
         {
             try
@@ -223,6 +228,7 @@ namespace TlApiExample.Services
             return null;
         }
 
+        // Check whether the code has been exchanged for the access token jwt
         private bool IsExchanged()
         {
             Cache cache = _cacheService.GetCache();

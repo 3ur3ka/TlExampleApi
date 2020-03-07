@@ -7,7 +7,6 @@ namespace TlApiExample.Helpers
         public string ClientSecret { get; set; }
         public string BaseAuthUrl { get; set; }
         public string BaseDataApiUrl { get; set; }
-
         public string RedirectUrl { get; set; }
     }
 }
