@@ -18,10 +18,5 @@ namespace TlApiExample.Models.Requests
 
         [JsonProperty("code")]
         public string Code { get; set; }
-
-        public ExchangeRequestDTO()
-        {
-
-        }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -14,6 +16,9 @@ namespace TlApiExample.Services
     public interface IHttpRequestService
     {
         Task<bool> DoExchangeAsync();
+        Task<bool> GetAccountsAsync();
+        Task<bool> GetTransactionsAsync();
+        Task<bool> AggregateAsync();
     }
 
     public class HttpRequestService : IHttpRequestService
@@ -35,6 +40,11 @@ namespace TlApiExample.Services
 
         public async Task<bool> DoExchangeAsync()
         {
+            Cache cache = _cacheService.GetCache();
+
+            if (cache == null || string.IsNullOrEmpty(cache.Code))
+                return false;
+
             string uri = _trueLayerCredentials.Value.BaseAuthUrl + "/connect/token";
 
             ExchangeRequestDTO exchangeDTO = new ExchangeRequestDTO()
@@ -46,31 +56,157 @@ namespace TlApiExample.Services
                 Code = _cacheService.GetCache().Code
             };
 
-            ExchangeResponseDTO responseObj = (ExchangeResponseDTO)await DoRequest<ExchangeResponseDTO>(exchangeDTO, uri);
+            ExchangeResponseDTO responseObj = (ExchangeResponseDTO)await DoRequest<ExchangeResponseDTO>(HttpMethod.Post, uri, false, exchangeDTO);
 
             if (responseObj == null)
                 return false;
 
-            Cache cache = new Cache { ExchangeResponseDTO = responseObj, Code = null };
+            cache = new Cache { ExchangeResponseDTO = responseObj, Code = null };
 
             _cacheService.SetCache(cache);
 
             return true;
         }
 
-        public async Task<IResponse> DoRequest<TResponse>(IRequest request, string uri) where TResponse : IResponse
+        public async Task<bool> GetAccountsAsync()
+        {
+
+            if (!IsExchanged())
+                return false;
+
+            string uri = _trueLayerCredentials.Value.BaseDataApiUrl + "/data/v1/accounts";
+
+            AccountsResponseDTO responseObj = (AccountsResponseDTO)await DoRequest<AccountsResponseDTO>(HttpMethod.Get, uri, true, null);
+
+            if (responseObj == null)
+                return false;
+
+            Cache cache = new Cache { AccountsResponseDTO = responseObj, ExchangeResponseDTO = _cacheService.GetCache().ExchangeResponseDTO };
+
+            _cacheService.SetCache(cache);
+
+            return true;
+        }
+
+        public async Task<bool> GetTransactionsAsync()
+        {
+            if (!IsExchanged())
+                return false;
+
+            List<Transaction> transactions = _cacheService.GetCache().Transactions;
+
+            if (transactions != null && transactions.Count > 0)
+            {
+                // The transactions have already been retrieved
+                return true;
+            }
+
+            AccountsResponseDTO accountsResponseDTO = _cacheService.GetCache().AccountsResponseDTO;
+
+            // If we don't already have the accounts, get them now.
+            // (Or if they are no accounts try and get them again.)
+            if (accountsResponseDTO == null || accountsResponseDTO.Accounts.Count == 0)
+            {
+                bool result = await GetAccountsAsync();
+
+                if (!result)
+                    return false;
+            }
+
+            foreach (Account account in accountsResponseDTO.Accounts)
+            {
+                string uri = _trueLayerCredentials.Value.BaseDataApiUrl + "/data/v1/accounts/" + account.AccountId + "/transactions";
+
+                TransactionsResponseDTO responseObj = (TransactionsResponseDTO)await DoRequest<TransactionsResponseDTO>(HttpMethod.Get, uri, true, null);
+
+                if (responseObj == null)
+                    return false;
+
+                transactions.AddRange(responseObj.Transactions);
+            }
+
+            Cache cache = new Cache {
+                Transactions = transactions,
+                AccountsResponseDTO = _cacheService.GetCache().AccountsResponseDTO,
+                ExchangeResponseDTO = _cacheService.GetCache().ExchangeResponseDTO
+            };
+
+            _cacheService.SetCache(cache);
+
+            return true;
+        }
+
+        public async Task<bool> AggregateAsync()
+        {
+
+            if (!IsExchanged())
+                return false;
+
+            List<Transaction> transactions = _cacheService.GetCache().Transactions;
+
+            if (transactions == null || transactions.Count == 0)
+            {
+                // The transactions have not already been retrieved
+                bool result = await GetTransactionsAsync();
+
+                if (!result)
+                    return false;
+
+                transactions = _cacheService.GetCache().Transactions;
+            }
+
+            var aggregatedTransactions = transactions
+                .Where(t => t.Timestamp > DateTime.Now.AddDays(-7))
+                .GroupBy(t => t.TransactionCategory)
+                .Select(g => new AggregatedTransactionsDTO { TransactionCategory = g.Key, Total = g.Sum(r => r.Amount) })
+                .ToList();
+
+            Cache cache = new Cache
+            {
+                Transactions = transactions,
+                AggregatedTransactions = aggregatedTransactions,
+                AccountsResponseDTO = _cacheService.GetCache().AccountsResponseDTO,
+                ExchangeResponseDTO = _cacheService.GetCache().ExchangeResponseDTO
+            };
+
+            _cacheService.SetCache(cache);
+
+            return true;
+        }
+
+        public async Task<IResponse> DoRequest<TResponse>(HttpMethod httpMethod, string uri, bool isAuthRequired = false, IRequest request = null) where TResponse : IResponse
         {
             try
             {
                 using HttpClient client = _clientFactory.CreateClient();
 
+                if (isAuthRequired)
+                {
+                    Console.WriteLine("setting bearer token");
+                    client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", _cacheService.GetCache().ExchangeResponseDTO.AccessToken);
+                }
+
                 Dictionary<string, string> dict = request.ToDict();
 
                 FormUrlEncodedContent requestContent = new FormUrlEncodedContent(dict);
 
-                var response = await client.PostAsync(uri, requestContent);
+                HttpResponseMessage response = null;
+
+                if (httpMethod == HttpMethod.Post)
+                {
+                    response = await client.PostAsync(uri, requestContent);
+                }
+                else if (httpMethod == HttpMethod.Get)
+                {
+                    response = AsyncHelper.RunSync(() => client.GetAsync(uri));
+                }
+
+                Console.WriteLine(response);
+
                 if (response != null)
                 {
+                    
                     response.EnsureSuccessStatusCode();
                     var jsonString = await response.Content.ReadAsStringAsync();
 
@@ -81,10 +217,25 @@ namespace TlApiExample.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Something went wrong when trying to exchange code: " + ex.Message);
+                Console.WriteLine("Error when trying to do api request: " + ex.Message);
             }
 
             return null;
+        }
+
+        private bool IsExchanged()
+        {
+            Cache cache = _cacheService.GetCache();
+
+            if (cache == null)
+                return false;
+
+            ExchangeResponseDTO exchangeResponseDTO = cache.ExchangeResponseDTO;
+
+            if (exchangeResponseDTO != null && !string.IsNullOrEmpty(exchangeResponseDTO.AccessToken))
+                return true;
+
+            return false;
         }
     }
 }

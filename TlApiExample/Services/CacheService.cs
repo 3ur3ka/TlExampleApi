@@ -34,7 +34,13 @@ namespace TlApiExample.Services
 
         public Cache GetCache()
         {
-            return JsonConvert.DeserializeObject<Cache>(_cache.GetString(GetCacheKey()));
+
+            string cacheStr = _cache.GetString(GetCacheKey());
+
+            if (string.IsNullOrEmpty(cacheStr))
+                return new Cache();
+
+            return JsonConvert.DeserializeObject<Cache>(cacheStr);
         }
 
         public void SetCache(Cache cache)

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using TlApiExample.Helpers;
 using TlApiExample.Models;
 using TlApiExample.Services;
@@ -64,15 +65,59 @@ namespace TlApiExample.Controllers
         [HttpGet("exchange")]
         public async Task<IActionResult> ExchangeAsync()
         {
-
             bool result = await _httpRequestService.DoExchangeAsync();
 
             if (!result)
             {
-                return BadRequest("Something went wrong when trying to exchange code");
+                return BadRequest("Error trying to exchange code");
             }
 
             return Ok("Exchanged Token");
+        }
+
+        [HttpGet("accounts")]
+        public async Task<IActionResult> AccountsAsync()
+        {
+            bool result = await _httpRequestService.GetAccountsAsync();
+
+            if (!result)
+            {
+                return BadRequest("Error trying to get accounts");
+            }
+
+            return Ok(JsonConvert.SerializeObject(_cacheService.GetCache().AccountsResponseDTO));
+        }
+
+        [HttpGet("transactions")]
+        public async Task<IActionResult> TransactionsAsync()
+        {
+            bool result = await _httpRequestService.GetTransactionsAsync();
+
+            if (!result)
+            {
+                return BadRequest("Error trying to get transactions");
+            }
+
+            return Ok($"Transactions: {JsonConvert.SerializeObject(_cacheService.GetCache().Transactions)}");
+        }
+
+        [HttpGet("aggregate")]
+        public async Task<IActionResult> AggregateAsync()
+        {
+            bool result = await _httpRequestService.AggregateAsync();
+
+            if (!result)
+            {
+                return BadRequest("Error trying to aggregate transactions");
+            }
+
+            return Ok(JsonConvert.SerializeObject(_cacheService.GetCache().AggregatedTransactions));
+        }
+
+        [HttpGet("token")]
+        public string Token()
+        {
+            return _cacheService.GetCache().ExchangeResponseDTO.AccessToken;
         }
 
         private void StoreCode(string code)
