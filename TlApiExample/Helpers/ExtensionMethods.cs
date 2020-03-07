@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Newtonsoft.Json;
 using TlApiExample.Entities;
 
 namespace TlApiExample.Helpers
@@ -11,5 +15,13 @@ namespace TlApiExample.Helpers
             user.PasswordSalt = null;
             return user;
         }
+
+        // Simple but convoluted way to convert POCO into Dictionary
+        public static Dictionary<string, string> ToDict<T>(this T target)
+            => target is null
+                ? new Dictionary<string, string>()
+                : JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                        JsonConvert.SerializeObject(target)
+                  );
     }
 }
