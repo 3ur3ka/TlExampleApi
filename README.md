@@ -1,5 +1,7 @@
 # The TrueLayer Api Example
 
+Welcome to the future.
+
 You'll need an `appSettings.Development.json` with the following or similar:
 
     {
@@ -26,9 +28,7 @@ You'll need an `appSettings.Development.json` with the following or similar:
         }
     }
 
-Then, for example, to run with docker execute:
-
-    $ docker-compose -f docker-compose.yml -f docker-compose.override.yml up --build
+To change between Live and Sandbox mode change the environment variable in `launchsettings.json` `USE_TRUELAYER_SANDBOX` to be `"false"` or `"true"` accordingly.
 
 To run the unit tests with code coverage in vscode (using coverage gutters)
 
@@ -39,6 +39,8 @@ To run the unit tests with code coverage in vscode (using coverage gutters)
 In order to create a session to identify the user I decided to implement a simple convenience login as a get request with url params. (Obviously this is only to allow the session to be created for the purposes of the exercise and would never normally be done like this.) Thus you _must_ log in before doing anything with
 
     https://localhost:5001/api/login?username=john&password=doe
+
+I've used the same credentials as for the TrueLayer sandbox, just to be confusing.
 
 After that, go to the TrueLayer auth url e.g.
 
@@ -60,4 +62,6 @@ Results are cached to prevent further TrueLayer api hits, but cache management a
 
 I used a DistributedCache because I figured it would be easier, but in hindsight a sql-lite in memory db may have been more efficient to save on all the serializing/deserializing.
 
-I would have liked to have written more unit tests - and ones more relevant to the api!, but hopefully the ones I did serve as an illustration.
+I would have liked to have written more unit tests - and ones more relevant to the api! Hopefully the ones I did serve as an illustration.
+
+The environment variables need to be pulled through when running with docker, but that's one for another day.
