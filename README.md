@@ -57,6 +57,6 @@ Results are cached to prevent further TrueLayer api hits, but cache management a
 
 ## Notes:
 
-I used a DistributedCache because I figured it would be easier, but in hindsight an sql-lite in memory db may have been more efficient to save on all the serializing/deserializing.
+I used a DistributedCache because I figured it would be easier, but in hindsight an sqlite in memory db may have been more efficient to save on all the serializing/deserializing of the entire cache.
 
 I would have liked to have written more unit tests. Hopefully the ones I did serve as an illustration.
