@@ -158,7 +158,6 @@ namespace TlApiExampleTests.Services
 
             int count = 0;
             mockCacheService.Setup(_ => _.GetCache())
-                //.Returns(dummyCacheWithCodeAndAccessToken);
                 .Returns(() => count++ <= 3 ? dummyCacheWithCodeAndAccessToken : dummyCacheWithAccounts);
 
             Cache cacheThatWasSet = null;
@@ -260,14 +259,9 @@ namespace TlApiExampleTests.Services
         {
             Mock<HttpMessageHandler> mockHttpMessageHandler = new Mock<HttpMessageHandler>();
 
-            int count = 0;
             mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-                //.Returns(Task.FromResult(GetAccountsResponseMessage()))
                 .Returns(Task.FromResult(message));
-                //.Returns(Task.FromResult(message));
-                //.Returns(() => count++ == 0 ?
-                //    Task.FromResult(GetAccountsResponseMessage()) : Task.FromResult(message));
 
             httpClient = new HttpClient(mockHttpMessageHandler.Object);
         }
