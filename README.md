@@ -34,7 +34,9 @@ To run the unit tests with code coverage in vscode (using coverage gutters)
 
     $ dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=./lcov.info TlApiExampleTests
 
-## Important
+## Api Usage
+
+### Important
 
 In order to create a session to identify the user I decided to implement a simple convenience login as a get request with url params. (Obviously this is only to allow the session to be created for the purposes of the exercise and would never normally be done like this.) Thus you _must_ log in before doing anything with
 
