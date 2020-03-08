@@ -2,7 +2,7 @@
 
 Welcome to the future: Open Banking!
 
-You'll need an `appSettings.Development.json` with the following or similar:
+You'll need an `appSettings.Development.json` in the root of the project with the following or similar:
 
     {
         "Logging": {
@@ -28,13 +28,13 @@ You'll need an `appSettings.Development.json` with the following or similar:
         }
     }
 
-To change between Live and Sandbox mode change the environment variable in `launchsettings.json` `USE_TRUELAYER_SANDBOX` to be `"false"` or `"true"` accordingly. (If running from docker it'll be the environment var in the `docker-compose.override.yml` file.)
+To change between Live and Sandbox mode change the environment variable in `Properties/launchsettings.json` `USE_TRUELAYER_SANDBOX` to be `"false"` or `"true"` accordingly. (If running from docker it'll be the environment var in the `docker-compose.override.yml` file in the root.)
 
-To run the app e.g. using docker the command is
+To run the app e.g. using docker, run the following command from the root of the project
 
     $ docker-compose -f docker-compose.yml -f docker-compose.override.yml up --build
 
-To run the unit tests with code coverage in vscode (using coverage gutters)
+To run the unit tests with code coverage in vscode (this creates an lcov.info used by the coverage gutters plugin)
 
     $ dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=./lcov.info TlApiExampleTests
 
