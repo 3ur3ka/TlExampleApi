@@ -43,26 +43,20 @@ namespace TlApiExample.Controllers
         }
 
         [HttpGet("callback")]
-        public async Task<IActionResult> Callback(string code)
+        public async Task<IActionResult> CallbackAsync(string code)
         {
             if (string.IsNullOrEmpty(code))
-            {
                 return BadRequest(new { message = "Url param 'code' not provided" });
-            }
+
 
             StoreCode(code);
 
             bool result = await _httpRequestService.DoExchangeAsync();
 
             if (!result)
-            {
                 return BadRequest(new { message = "Error trying to exchange code" });
-            }
 
-            return Ok(new
-            {
-                message = "OK"
-            });
+            return Ok(new { message = "OK" });
         }
 
         [HttpGet("transactions")]
@@ -71,9 +65,7 @@ namespace TlApiExample.Controllers
             bool result = await _httpRequestService.GetTransactionsAsync();
 
             if (!result)
-            {
                 return BadRequest(new { message = "Error trying to get transactions" });
-            }
 
             return Ok(JsonConvert.SerializeObject(_cacheService.GetCache().Transactions));
         }
@@ -84,9 +76,7 @@ namespace TlApiExample.Controllers
             bool result = await _httpRequestService.AggregateAsync();
 
             if (!result)
-            {
                 return BadRequest(new { message = "Error trying to aggregate transactions" });
-            }
 
             return Ok(JsonConvert.SerializeObject(_cacheService.GetCache().AggregatedTransactions));
         }

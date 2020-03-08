@@ -72,9 +72,6 @@ namespace TlApiExample.Services
         // Get the users accounts
         public async Task<bool> GetAccountsAsync()
         {
-            if (!IsExchanged())
-                return false;
-
             string uri = _trueLayerCredentials.Value.BaseDataApiUrl + "/data/v1/accounts";
 
             AccountsResponseDTO responseObj =
@@ -97,9 +94,6 @@ namespace TlApiExample.Services
         // Get some transactions
         public async Task<bool> GetTransactionsAsync()
         {
-            if (!IsExchanged())
-                return false;
-
             List<Transaction> transactions = _cacheService.GetCache().Transactions;
 
             if (transactions != null && transactions.Count > 0)
@@ -143,9 +137,6 @@ namespace TlApiExample.Services
         // Get the transactions aggregated by category
         public async Task<bool> AggregateAsync()
         {
-            if (!IsExchanged())
-                return false;
-
             List<Transaction> transactions = _cacheService.GetCache().Transactions;
 
             if (transactions == null || transactions.Count == 0)
@@ -225,22 +216,6 @@ namespace TlApiExample.Services
             }
 
             return null;
-        }
-
-        // Check whether the code has been exchanged for the access token jwt
-        private bool IsExchanged()
-        {
-            Cache cache = _cacheService.GetCache();
-
-            if (cache == null)
-                return false;
-
-            ExchangeResponseDTO exchangeResponseDTO = cache.ExchangeResponseDTO;
-
-            if (exchangeResponseDTO != null && !string.IsNullOrEmpty(exchangeResponseDTO.AccessToken))
-                return true;
-
-            return false;
         }
 
         private async Task<bool> GetAccountTransactions(string accountId, List<Transaction> transactions)

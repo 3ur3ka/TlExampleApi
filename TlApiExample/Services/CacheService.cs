@@ -28,8 +28,9 @@ namespace TlApiExample.Services
 
         public string GetCacheKey()
         {
-            // Get the user Guid
-            return _httpContextAccessor.HttpContext.User.Claims.SingleOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
+            // Get the logged in user Guid
+            return _httpContextAccessor.HttpContext.User.Claims
+                .SingleOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
         }
 
         public Cache GetCache()

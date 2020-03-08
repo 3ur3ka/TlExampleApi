@@ -159,7 +159,7 @@ namespace TlApiExampleTests.Services
             int count = 0;
             mockCacheService.Setup(_ => _.GetCache())
                 //.Returns(dummyCacheWithCodeAndAccessToken);
-                .Returns(() => count++ <= 5 ? dummyCacheWithCodeAndAccessToken : dummyCacheWithAccounts);
+                .Returns(() => count++ <= 3 ? dummyCacheWithCodeAndAccessToken : dummyCacheWithAccounts);
 
             Cache cacheThatWasSet = null;
 
