@@ -34,7 +34,6 @@ namespace TlApiExample.Services
 
         public Cache GetCache()
         {
-
             string cacheStr = _cache.GetString(GetCacheKey());
 
             if (string.IsNullOrEmpty(cacheStr))

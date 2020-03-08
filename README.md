@@ -28,7 +28,7 @@ You'll need an `appSettings.Development.json` with the following or similar:
         }
     }
 
-To change between Live and Sandbox mode change the environment variable in `launchsettings.json` `USE_TRUELAYER_SANDBOX` to be `"false"` or `"true"` accordingly.
+To change between Live and Sandbox mode change the environment variable in `launchsettings.json` `USE_TRUELAYER_SANDBOX` to be `"false"` or `"true"` accordingly. (If running from docker it'll be the environment var in the `docker-compose.override.yml` file.)
 
 To run the unit tests with code coverage in vscode (using coverage gutters)
 
@@ -55,8 +55,6 @@ Results are cached to prevent further TrueLayer api hits, but cache management a
 
 ## Notes:
 
-I used a DistributedCache because I figured it would be easier, but in hindsight a sql-lite in memory db may have been more efficient to save on all the serializing/deserializing.
+I used a DistributedCache because I figured it would be easier, but in hindsight an sql-lite in memory db may have been more efficient to save on all the serializing/deserializing.
 
-I would have liked to have written more unit tests - and ones more relevant to the api! Hopefully the ones I did serve as an illustration.
-
-The environment variables need to be pulled through when running with docker, but that's one for another day.
+I would have liked to have written more unit tests. Hopefully the ones I did serve as an illustration.

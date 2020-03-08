@@ -2,7 +2,7 @@
 
 namespace TlApiExample.Models
 {
-    public class AggregatedTransactionsDTO
+    public class AggregatedTransactions
     {
         [JsonProperty("transaction_category")]
         public string TransactionCategory { get; set; }

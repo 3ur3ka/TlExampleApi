@@ -2,7 +2,6 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Moq;
 using TlApiExample.Entities;
@@ -13,20 +12,18 @@ namespace TlApiExampleTests
 {
     public class UserServiceTests
     {
-        private readonly Mock<IHttpContextAccessor> httpContextAccessorMock;
+        private readonly Mock<IHttpContextAccessor> httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        private readonly Mock<IAuthenticationService> authServiceMock = new Mock<IAuthenticationService>();
+        private readonly Mock<IServiceProvider> serviceProviderMock = new Mock<IServiceProvider>();
         private HttpContext context;
+
         private readonly IUserService userService;
-        private readonly Mock<IAuthenticationService> authServiceMock;
-        private readonly Mock<IServiceProvider> serviceProviderMock;
 
         public UserServiceTests()
         {
-            authServiceMock = new Mock<IAuthenticationService>();
-            httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-            serviceProviderMock = new Mock<IServiceProvider>();
             SetupAuthServices();
 
-            // The class to be tested
+            // Service under test
             userService = new UserService(httpContextAccessorMock.Object);
         }
 
@@ -59,7 +56,7 @@ namespace TlApiExampleTests
 
             // Assert
             Assert.True(user == null);
-            authServiceMock.Verify(m => m.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
+            authServiceMock.Verify(_ => _.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
         }
 
         [Fact]
@@ -72,7 +69,7 @@ namespace TlApiExampleTests
 
             // Assert
             Assert.True(user == null);
-            authServiceMock.Verify(m => m.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
+            authServiceMock.Verify(_ => _.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
 
         }
 
@@ -86,7 +83,7 @@ namespace TlApiExampleTests
 
             // Assert
             Assert.True(user == null);
-            authServiceMock.Verify(m => m.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
+            authServiceMock.Verify(_ => _.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
 
         }
 
@@ -100,7 +97,7 @@ namespace TlApiExampleTests
 
             // Assert
             Assert.True(user == null);
-            authServiceMock.Verify(m => m.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
+            authServiceMock.Verify(_ => _.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
 
         }
 
@@ -114,7 +111,7 @@ namespace TlApiExampleTests
 
             // Assert
             Assert.True(user == null);
-            authServiceMock.Verify(m => m.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
+            authServiceMock.Verify(_ => _.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
 
         }
 
@@ -131,7 +128,7 @@ namespace TlApiExampleTests
             Assert.True(user.Username == "john");
             Assert.True(user.PasswordHash == null);
             Assert.True(user.PasswordSalt == null);
-            authServiceMock.Verify(m => m.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Once);
+            authServiceMock.Verify(_ => _.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Once);
 
         }
 
@@ -144,8 +141,8 @@ namespace TlApiExampleTests
             await userService.Logout();
 
             // Assert
-            authServiceMock.Verify(m => m.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
-            authServiceMock.Verify(m => m.SignOutAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<AuthenticationProperties>()), Times.Once);
+            authServiceMock.Verify(_ => _.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Never);
+            authServiceMock.Verify(_ => _.SignOutAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<AuthenticationProperties>()), Times.Once);
         }
 
         [Fact]
@@ -158,8 +155,8 @@ namespace TlApiExampleTests
             await userService.Logout();
 
             // Assert
-            authServiceMock.Verify(m => m.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Once);
-            authServiceMock.Verify(m => m.SignOutAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<AuthenticationProperties>()), Times.Once);
+            authServiceMock.Verify(_ => _.SignInAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<AuthenticationProperties>()), Times.Once);
+            authServiceMock.Verify(_ => _.SignOutAsync(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<AuthenticationProperties>()), Times.Once);
 
         }
 

@@ -83,7 +83,8 @@ namespace TlApiExample.Services
             if (responseObj == null)
                 return false;
 
-            Cache cache = new Cache {
+            Cache cache = new Cache
+            {
                 AccountsResponseDTO = responseObj,
                 ExchangeResponseDTO = _cacheService.GetCache().ExchangeResponseDTO
             };
@@ -121,7 +122,10 @@ namespace TlApiExample.Services
 
             accountsResponseDTO = _cacheService.GetCache().AccountsResponseDTO;
 
-            var tasks = accountsResponseDTO.Accounts.Select(i => GetAccount(i.AccountId, transactions));
+            if (accountsResponseDTO == null)
+                return false;
+
+            IEnumerable<Task<bool>> tasks = accountsResponseDTO.Accounts.Select(i => GetAccountTransactions(i.AccountId, transactions));
             await Task.WhenAll(tasks);
 
             Cache cache = new Cache
@@ -158,7 +162,7 @@ namespace TlApiExample.Services
             var aggregatedTransactions = transactions
                 .Where(t => t.Timestamp > DateTime.Now.AddDays(-7))
                 .GroupBy(t => t.TransactionCategory)
-                .Select(g => new AggregatedTransactionsDTO { TransactionCategory = g.Key, Total = g.Sum(r => r.Amount) })
+                .Select(g => new AggregatedTransactions { TransactionCategory = g.Key, Total = g.Sum(r => r.Amount) })
                 .ToList();
 
             Cache cache = new Cache
@@ -179,7 +183,8 @@ namespace TlApiExample.Services
         {
             try
             {
-                using HttpClient client = _clientFactory.CreateClient();
+                // apparently don't need a using here: https://aspnetmonsters.com/2016/08/2016-08-27-httpclientwrong/
+                HttpClient client = _clientFactory.CreateClient();
 
                 if (isAuthRequired)
                 {
@@ -238,7 +243,7 @@ namespace TlApiExample.Services
             return false;
         }
 
-        private async Task<bool> GetAccount(string accountId, List<Transaction> transactions)
+        private async Task<bool> GetAccountTransactions(string accountId, List<Transaction> transactions)
         {
             string uri = _trueLayerCredentials.Value.BaseDataApiUrl + "/data/v1/accounts/" + accountId + "/transactions";
 

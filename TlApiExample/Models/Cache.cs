@@ -10,6 +10,6 @@ namespace TlApiExample.Models
         public ExchangeResponseDTO ExchangeResponseDTO { get; set; }
         public AccountsResponseDTO AccountsResponseDTO { get; set; }
         public List<Transaction> Transactions { get; set; } = new List<Transaction>();
-        public List<AggregatedTransactionsDTO> AggregatedTransactions { get; set; } = new List<AggregatedTransactionsDTO>();
+        public List<AggregatedTransactions> AggregatedTransactions { get; set; } = new List<AggregatedTransactions>();
     }
 }
