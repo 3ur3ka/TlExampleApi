@@ -34,7 +34,7 @@ To run the app e.g. using docker, run the following command from the root of the
 
     $ docker-compose -f docker-compose.yml -f docker-compose.override.yml up --build
 
-To run the unit tests with code coverage in vscode (this creates an lcov.info used by the coverage gutters plugin)
+To run the unit tests with code coverage in vscode (this creates an `lcov.info` file used by the coverage gutters plugin)
 
     $ dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=./lcov.info TlApiExampleTests
 
