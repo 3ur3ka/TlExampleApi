@@ -30,6 +30,10 @@ You'll need an `appSettings.Development.json` with the following or similar:
 
 To change between Live and Sandbox mode change the environment variable in `launchsettings.json` `USE_TRUELAYER_SANDBOX` to be `"false"` or `"true"` accordingly. (If running from docker it'll be the environment var in the `docker-compose.override.yml` file.)
 
+To run the app e.g. using docker the command is
+
+    $ docker-compose -f docker-compose.yml -f docker-compose.override.yml up --build
+
 To run the unit tests with code coverage in vscode (using coverage gutters)
 
     $ dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=./lcov.info TlApiExampleTests
