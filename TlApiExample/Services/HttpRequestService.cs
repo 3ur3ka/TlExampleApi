@@ -159,7 +159,7 @@ namespace TlApiExample.Services
                 transactions = _cacheService.GetCache().Transactions;
             }
 
-            var aggregatedTransactions = transactions
+            List<AggregatedTransactions> aggregatedTransactions = transactions
                 .Where(t => t.Timestamp > DateTime.Now.AddDays(-7))
                 .GroupBy(t => t.TransactionCategory)
                 .Select(g => new AggregatedTransactions { TransactionCategory = g.Key, Total = g.Sum(r => r.Amount) })
@@ -211,7 +211,7 @@ namespace TlApiExample.Services
                 {
 
                     response.EnsureSuccessStatusCode();
-                    var jsonString = await response.Content.ReadAsStringAsync();
+                    string jsonString = await response.Content.ReadAsStringAsync();
 
                     IResponse responseObj = JsonConvert.DeserializeObject<TResponse>(jsonString);
 

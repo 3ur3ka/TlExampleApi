@@ -39,7 +39,7 @@ namespace TlApiExample.Services
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
                 return null;
 
-            var user = _users.SingleOrDefault(x => x.Username == username);
+            User user = _users.SingleOrDefault(x => x.Username == username);
 
             if (user == null)
                 return null;
@@ -49,7 +49,7 @@ namespace TlApiExample.Services
                 return null;
 
             // session identity and claims
-            var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
+            ClaimsIdentity identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
             identity.AddClaim(new Claim(ClaimTypes.Name, user.Username));
             identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Guid.ToString()));
 
@@ -80,9 +80,9 @@ namespace TlApiExample.Services
 
         private bool VerifyPassword(string password, byte[] hash, byte[] salt)
         {
-            using (var hmac = new HMACSHA512(salt))
+            using (HMACSHA512 hmac = new HMACSHA512(salt))
             {
-                var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+                byte[] computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
                 for (int i = 0; i < computedHash.Length; i++)
                 {
                     if (computedHash[i] != hash[i]) return false;

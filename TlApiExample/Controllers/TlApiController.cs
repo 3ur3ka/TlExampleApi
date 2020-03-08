@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using TlApiExample.Entities;
 using TlApiExample.Models;
 using TlApiExample.Services;
 
@@ -30,14 +31,15 @@ namespace TlApiExample.Controllers
         // TODO: TO BE REMOVED WHEN LOG IN HAS BEEN IMPLEMENTED FULLY IN WEB APP, THIS IS FOR CONVENIENCE ONLY 
         [AllowAnonymous]
         [HttpGet("login")]
-        public IActionResult LoginConvenience(string username, string password)
+        public async Task<IActionResult> LoginConvenience(string username, string password)
         {
-            var user = _userService.AuthenticateAsync(username, password);
+            User user = await _userService.AuthenticateAsync(username, password);
 
             if (user == null)
                 return BadRequest(new { message = "Sorry, wrong credentials" });
 
-            return Ok(user);
+            return Ok(JsonConvert.SerializeObject(user, new JsonSerializerSettings
+                { NullValueHandling = NullValueHandling.Ignore }) );
         }
 
         [HttpGet("callback")]
