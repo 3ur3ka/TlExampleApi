@@ -1,6 +1,6 @@
 # The TrueLayer Api Example
 
-Welcome to the future.
+Welcome to the future: Open Banking!
 
 You'll need an `appSettings.Development.json` with the following or similar:
 
@@ -42,11 +42,11 @@ To run the unit tests with code coverage in vscode (using coverage gutters)
 
 ### Important
 
-In order to create a session to identify the user I decided to implement a simple convenience login as a get request with url params. (Obviously this is only to allow the session to be created for the purposes of the exercise and would never normally be done like this.) Thus you _must_ log in before doing anything with
+In order to create a session to identify the user I decided to implement a simple convenience login as a get request with url params. (Obviously this is only to allow the session to be created for the purposes of the exercise and would never normally be done like this.) Thus you _must_ log in before doing anything by going to the following url in the browser:
 
     https://localhost:5001/api/login?username=john&password=doe
 
-I've used the same credentials as for the TrueLayer sandbox, just to be confusing.
+I've used the same credentials as for the TrueLayer sandbox.
 
 After that, go to the TrueLayer auth url e.g.
 
