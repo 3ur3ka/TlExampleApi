@@ -10,7 +10,6 @@ namespace TlApiExample.Services
     public interface ICacheService
     {
         Cache GetCache();
-        string GetCacheKey();
         void SetCache(Cache cache);
     }
 
@@ -26,13 +25,6 @@ namespace TlApiExample.Services
             _cache = cache;
         }
 
-        public string GetCacheKey()
-        {
-            // Get the logged in user Guid
-            return _httpContextAccessor.HttpContext.User.Claims
-                .SingleOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
-        }
-
         public Cache GetCache()
         {
             string cacheStr = _cache.GetString(GetCacheKey());
@@ -46,6 +38,13 @@ namespace TlApiExample.Services
         public void SetCache(Cache cache)
         {
             _cache.SetString(GetCacheKey(), JsonConvert.SerializeObject(cache));
+        }
+
+        private string GetCacheKey()
+        {
+            // Get the logged in user Guid
+            return _httpContextAccessor.HttpContext.User.Claims
+                .SingleOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
         }
     }
 }
