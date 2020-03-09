@@ -242,7 +242,7 @@ namespace TlApiExampleTests.Services
             HttpContent content = new StringContent(JsonConvert.SerializeObject(dummyTransactionsResponseDTO));
             HttpResponseMessage message = new HttpResponseMessage { StatusCode = HttpStatusCode.OK, Content = content };
 
-            SetupHttpMessageHandlerForGetTransactions(message);
+            SetupHttpMessageHandler(message);
         }
 
         private void SetupHttpMessageHandler(HttpResponseMessage message)
@@ -251,17 +251,6 @@ namespace TlApiExampleTests.Services
             mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
                 .Returns(() => Task.FromResult(message));
-
-            httpClient = new HttpClient(mockHttpMessageHandler.Object);
-        }
-
-        private void SetupHttpMessageHandlerForGetTransactions(HttpResponseMessage message)
-        {
-            Mock<HttpMessageHandler> mockHttpMessageHandler = new Mock<HttpMessageHandler>();
-
-            mockHttpMessageHandler.Protected()
-                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
-                .Returns(Task.FromResult(message));
 
             httpClient = new HttpClient(mockHttpMessageHandler.Object);
         }
