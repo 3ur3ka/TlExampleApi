@@ -30,7 +30,7 @@ namespace TlApiExample.Services
             string cacheStr = _cache.GetString(GetCacheKey());
 
             if (string.IsNullOrEmpty(cacheStr))
-                return new Cache();
+                return null;
 
             return JsonConvert.DeserializeObject<Cache>(cacheStr);
         }
