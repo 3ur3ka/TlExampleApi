@@ -1,9 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using TlApiExample.Entities;
 using TlApiExample.Models;
+using TlApiExample.Models.Responses;
 using TlApiExample.Services;
 
 namespace TlApiExample.Controllers
@@ -14,17 +16,14 @@ namespace TlApiExample.Controllers
     public class TlApiController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly ICacheService _cacheService;
         private readonly IHttpRequestService _httpRequestService;
 
         public TlApiController(
             IUserService userService,
-            ICacheService cacheService,
             IHttpRequestService httpRequestService
         )
         {
             _userService = userService;
-            _cacheService = cacheService;
             _httpRequestService = httpRequestService;
         }
 
@@ -48,10 +47,7 @@ namespace TlApiExample.Controllers
             if (string.IsNullOrEmpty(code))
                 return BadRequest(new { message = "Url param 'code' not provided" });
 
-
-            StoreCode(code);
-
-            bool result = await _httpRequestService.DoExchangeAsync();
+            bool result = await _httpRequestService.DoExchangeAsync(code);
 
             if (!result)
                 return BadRequest(new { message = "Error trying to exchange code" });
@@ -62,32 +58,23 @@ namespace TlApiExample.Controllers
         [HttpGet("transactions")]
         public async Task<IActionResult> TransactionsAsync()
         {
-            bool result = await _httpRequestService.GetTransactionsAsync();
+            List<Transaction> results = await _httpRequestService.GetTransactionsAsync();
 
-            if (!result)
+            if (results == null)
                 return BadRequest(new { message = "Error trying to get transactions" });
 
-            return Ok(JsonConvert.SerializeObject(_cacheService.GetCache().Transactions));
+            return Ok(JsonConvert.SerializeObject(results));
         }
 
         [HttpGet("aggregate")]
         public async Task<IActionResult> AggregateAsync()
         {
-            bool result = await _httpRequestService.AggregateAsync();
+            List<AggregatedTransaction> results = await _httpRequestService.AggregateAsync();
 
-            if (!result)
+            if (results == null)
                 return BadRequest(new { message = "Error trying to aggregate transactions" });
 
-            return Ok(JsonConvert.SerializeObject(_cacheService.GetCache().AggregatedTransactions));
-        }
-
-        private void StoreCode(string code)
-        {
-            // Create the cache object and store code in it
-            Cache cache = new Cache { Code = code };
-
-            // Set the cache
-            _cacheService.SetCache(cache);
+            return Ok(JsonConvert.SerializeObject(results));
         }
     }
 }

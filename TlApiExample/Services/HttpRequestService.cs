@@ -15,10 +15,10 @@ namespace TlApiExample.Services
 {
     public interface IHttpRequestService
     {
-        Task<bool> DoExchangeAsync();
-        Task<bool> GetAccountsAsync();
-        Task<bool> GetTransactionsAsync();
-        Task<bool> AggregateAsync();
+        Task<bool> DoExchangeAsync(string code);
+        Task<AccountsResponseDTO> GetAccountsAsync();
+        Task<List<Transaction>> GetTransactionsAsync();
+        Task<List<AggregatedTransaction>> AggregateAsync();
     }
 
     public class HttpRequestService : IHttpRequestService
@@ -39,11 +39,9 @@ namespace TlApiExample.Services
         }
 
         // Exchange the code for a jwt access token
-        public async Task<bool> DoExchangeAsync()
+        public async Task<bool> DoExchangeAsync(string code)
         {
-            Cache cache = _cacheService.GetCache();
-
-            if (cache == null || string.IsNullOrEmpty(cache.Code))
+            if (string.IsNullOrEmpty(code))
                 return false;
 
             string uri = _trueLayerCredentials.Value.BaseAuthUrl + "/connect/token";
@@ -54,7 +52,7 @@ namespace TlApiExample.Services
                 ClientId = _trueLayerCredentials.Value.ClientId,
                 ClientSecret = _trueLayerCredentials.Value.ClientSecret,
                 RedirectUri = _trueLayerCredentials.Value.RedirectUrl,
-                Code = _cacheService.GetCache().Code
+                Code = code
             };
 
             ExchangeResponseDTO responseObj = (ExchangeResponseDTO)await DoRequest<ExchangeResponseDTO>(HttpMethod.Post, uri, false, exchangeDTO);
@@ -62,7 +60,7 @@ namespace TlApiExample.Services
             if (responseObj == null)
                 return false;
 
-            cache = new Cache { ExchangeResponseDTO = responseObj, Code = null };
+            Cache cache = new Cache { ExchangeResponseDTO = responseObj };
 
             _cacheService.SetCache(cache);
 
@@ -70,7 +68,7 @@ namespace TlApiExample.Services
         }
 
         // Get the users accounts
-        public async Task<bool> GetAccountsAsync()
+        public async Task<AccountsResponseDTO> GetAccountsAsync()
         {
             string uri = _trueLayerCredentials.Value.BaseDataApiUrl + "/data/v1/accounts";
 
@@ -78,7 +76,7 @@ namespace TlApiExample.Services
                 (AccountsResponseDTO)await DoRequest<AccountsResponseDTO>(HttpMethod.Get, uri, true, null);
 
             if (responseObj == null)
-                return false;
+                return null;
 
             Cache cache = new Cache
             {
@@ -88,18 +86,18 @@ namespace TlApiExample.Services
 
             _cacheService.SetCache(cache);
 
-            return true;
+            return responseObj;
         }
 
         // Get some transactions
-        public async Task<bool> GetTransactionsAsync()
+        public async Task<List<Transaction>> GetTransactionsAsync()
         {
             List<Transaction> transactions = _cacheService.GetCache().Transactions;
 
             if (transactions != null && transactions.Count > 0)
             {
                 // The transactions have already been retrieved
-                return true;
+                return transactions;
             }
 
             AccountsResponseDTO accountsResponseDTO = _cacheService.GetCache().AccountsResponseDTO;
@@ -108,19 +106,28 @@ namespace TlApiExample.Services
             // (Or if they are no accounts try and get them again.)
             if (accountsResponseDTO == null || accountsResponseDTO.Accounts.Count == 0)
             {
-                bool result = await GetAccountsAsync();
+                AccountsResponseDTO result = await GetAccountsAsync();
 
-                if (!result)
-                    return false;
+                if (result == null)
+                    return null;
             }
 
             accountsResponseDTO = _cacheService.GetCache().AccountsResponseDTO;
 
             if (accountsResponseDTO == null)
-                return false;
+                return null;
 
-            IEnumerable<Task<bool>> tasks = accountsResponseDTO.Accounts.Select(i => GetAccountTransactions(i.AccountId, transactions));
-            await Task.WhenAll(tasks);
+            IEnumerable<Task<List<Transaction>>> tasks = accountsResponseDTO.Accounts.Select(i => GetAccountTransactions(i.AccountId));
+
+            List<Transaction>[] results = await Task.WhenAll(tasks);
+
+            foreach (List<Transaction> result in results)
+            {
+                if (result != null)
+                {
+                    transactions.AddRange(result);
+                }
+            }
 
             Cache cache = new Cache
             {
@@ -131,29 +138,27 @@ namespace TlApiExample.Services
 
             _cacheService.SetCache(cache);
 
-            return true;
+            return transactions;
         }
 
         // Get the transactions aggregated by category
-        public async Task<bool> AggregateAsync()
+        public async Task<List<AggregatedTransaction>> AggregateAsync()
         {
             List<Transaction> transactions = _cacheService.GetCache().Transactions;
 
             if (transactions == null || transactions.Count == 0)
             {
                 // The transactions have not already been retrieved
-                bool result = await GetTransactionsAsync();
+                transactions = await GetTransactionsAsync();
 
-                if (!result)
-                    return false;
-
-                transactions = _cacheService.GetCache().Transactions;
+                if (transactions == null)
+                    return null;
             }
 
-            List<AggregatedTransactions> aggregatedTransactions = transactions
+            List<AggregatedTransaction> aggregatedTransactions = transactions
                 .Where(t => t.Timestamp > DateTime.Now.AddDays(-7))
                 .GroupBy(t => t.TransactionCategory)
-                .Select(g => new AggregatedTransactions { TransactionCategory = g.Key, Total = g.Sum(r => r.Amount) })
+                .Select(g => new AggregatedTransaction { TransactionCategory = g.Key, Total = g.Sum(r => r.Amount) })
                 .ToList();
 
             Cache cache = new Cache
@@ -166,7 +171,7 @@ namespace TlApiExample.Services
 
             _cacheService.SetCache(cache);
 
-            return true;
+            return aggregatedTransactions;
         }
 
         // The main genericized request function
@@ -218,18 +223,16 @@ namespace TlApiExample.Services
             return null;
         }
 
-        private async Task<bool> GetAccountTransactions(string accountId, List<Transaction> transactions)
+        private async Task<List<Transaction>> GetAccountTransactions(string accountId)
         {
             string uri = _trueLayerCredentials.Value.BaseDataApiUrl + "/data/v1/accounts/" + accountId + "/transactions";
 
             TransactionsResponseDTO responseObj = (TransactionsResponseDTO)await DoRequest<TransactionsResponseDTO>(HttpMethod.Get, uri, true, null);
 
             if (responseObj == null)
-                return false;
+                return null;
 
-            transactions.AddRange(responseObj.Transactions);
-
-            return true;
+            return responseObj.Transactions;
         }
     }
 }

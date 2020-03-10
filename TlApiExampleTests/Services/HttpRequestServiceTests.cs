@@ -42,7 +42,6 @@ namespace TlApiExampleTests.Services
         private readonly string dummyCode = "1234";
         private readonly string dummyAccessToken = "5678";
         private readonly string dummyCacheKey = "000c6036-5c68-4f6c-9c98-3c8260de0027";
-        private readonly Cache dummyCacheWithCode;
         private readonly Cache dummyCacheWithCodeAndAccessToken;
         private readonly Cache dummyCacheWithAccounts;
         private readonly ExchangeResponseDTO dummyExchangeResponseDTO;
@@ -54,7 +53,6 @@ namespace TlApiExampleTests.Services
         public HttpRequestServiceTests()
         {
             trueLayerCredentialsOptions = Options.Create(trueLayerCredentials);
-            dummyCacheWithCode = new Cache { Code = dummyCode };
             dummyExchangeResponseDTO = new ExchangeResponseDTO { AccessToken = dummyAccessToken };
 
             Account account1 = new Account { AccountId = "1" };
@@ -65,12 +63,10 @@ namespace TlApiExampleTests.Services
                 Accounts = new List<Account> { account1, account2 }
             };
             dummyCacheWithCodeAndAccessToken = new Cache {
-                Code = dummyCode,
                 ExchangeResponseDTO = dummyExchangeResponseDTO
             };
             dummyCacheWithAccounts = new Cache
             {
-                Code = dummyCode,
                 ExchangeResponseDTO = dummyExchangeResponseDTO,
                 AccountsResponseDTO = dummyAccountsResponseDTO
             };
@@ -98,7 +94,6 @@ namespace TlApiExampleTests.Services
         {
             // Arrange
             mockCacheService.Setup(_ => _.GetCacheKey()).Returns(dummyCacheKey);
-            mockCacheService.Setup(_ => _.GetCache()).Returns(dummyCacheWithCode);
 
             Cache cacheThatWasSet = null;
 
@@ -114,10 +109,9 @@ namespace TlApiExampleTests.Services
                 mockCacheService.Object, trueLayerCredentialsOptions);
 
             // Act
-            await httpRequestService.DoExchangeAsync();
+            await httpRequestService.DoExchangeAsync(dummyCode);
 
             // Assert
-            mockCacheService.Verify(_ => _.GetCache());
             Assert.NotNull(cacheThatWasSet.ExchangeResponseDTO);
             Assert.Equal(cacheThatWasSet.ExchangeResponseDTO.AccessToken, dummyAccessToken);
         }
@@ -140,12 +134,16 @@ namespace TlApiExampleTests.Services
             SetupHttpRequestService();
 
             // Act
-            await httpRequestService.GetAccountsAsync();
+            AccountsResponseDTO accounts = await httpRequestService.GetAccountsAsync();
 
             // Assert
+            Assert.Equal(accounts.Accounts[0].AccountId,
+                dummyAccountsResponseDTO.Accounts[0].AccountId);
+            Assert.Equal(accounts.Accounts[1].AccountId,
+                dummyAccountsResponseDTO.Accounts[1].AccountId);
+
             Assert.Equal(cacheThatWasSet.AccountsResponseDTO.Accounts[0].AccountId,
                 dummyAccountsResponseDTO.Accounts[0].AccountId);
-
             Assert.Equal(cacheThatWasSet.AccountsResponseDTO.Accounts[1].AccountId,
                 dummyAccountsResponseDTO.Accounts[1].AccountId);
         }
@@ -171,13 +169,18 @@ namespace TlApiExampleTests.Services
             SetupHttpRequestService();
 
             // Act
-            await httpRequestService.GetTransactionsAsync();
+            List<Transaction> transactions = await httpRequestService.GetTransactionsAsync();
 
             // Assert
             Assert.True(IsEqual(cacheThatWasSet.Transactions[0], dummyTransactions[0]));
             Assert.True(IsEqual(cacheThatWasSet.Transactions[1], dummyTransactions[1]));
             Assert.True(IsEqual(cacheThatWasSet.Transactions[2], dummyTransactions[0]));
             Assert.True(IsEqual(cacheThatWasSet.Transactions[3], dummyTransactions[1]));
+
+            Assert.True(IsEqual(transactions[0], dummyTransactions[0]));
+            Assert.True(IsEqual(transactions[1], dummyTransactions[1]));
+            Assert.True(IsEqual(transactions[2], dummyTransactions[0]));
+            Assert.True(IsEqual(transactions[3], dummyTransactions[1]));
         }
 
         [Fact]
@@ -200,13 +203,18 @@ namespace TlApiExampleTests.Services
             SetupHttpRequestService();
 
             // Act
-            await httpRequestService.GetTransactionsAsync();
+            List<Transaction> transactions = await httpRequestService.GetTransactionsAsync();
 
             // Assert
             Assert.True(IsEqual(cacheThatWasSet.Transactions[0], dummyTransactions[0]));
             Assert.True(IsEqual(cacheThatWasSet.Transactions[1], dummyTransactions[1]));
             Assert.True(IsEqual(cacheThatWasSet.Transactions[2], dummyTransactions[0]));
             Assert.True(IsEqual(cacheThatWasSet.Transactions[3], dummyTransactions[1]));
+
+            Assert.True(IsEqual(transactions[0], dummyTransactions[0]));
+            Assert.True(IsEqual(transactions[1], dummyTransactions[1]));
+            Assert.True(IsEqual(transactions[2], dummyTransactions[0]));
+            Assert.True(IsEqual(transactions[3], dummyTransactions[1]));
         }
 
         private void SetupHttpClientFactory()
