@@ -41,7 +41,6 @@ namespace TlApiExampleTests.Services
 
         private readonly string dummyCode = "1234";
         private readonly string dummyAccessToken = "5678";
-        private readonly string dummyCacheKey = "000c6036-5c68-4f6c-9c98-3c8260de0027";
         private readonly Cache dummyCacheWithCodeAndAccessToken;
         private readonly Cache dummyCacheWithAccounts;
         private readonly ExchangeResponseDTO dummyExchangeResponseDTO;
@@ -93,8 +92,6 @@ namespace TlApiExampleTests.Services
         public async Task TestDoExchangeAsync()
         {
             // Arrange
-            mockCacheService.Setup(_ => _.GetCacheKey()).Returns(dummyCacheKey);
-
             Cache cacheThatWasSet = null;
 
             mockCacheService.Setup(_ => _.SetCache(It.IsAny<Cache>()))
@@ -120,7 +117,6 @@ namespace TlApiExampleTests.Services
         public async Task TestGetAccounts()
         {
             // Arrange
-            mockCacheService.Setup(_ => _.GetCacheKey()).Returns(dummyCacheKey);
             mockCacheService.Setup(_ => _.GetCache()).Returns(dummyCacheWithCodeAndAccessToken);
 
             Cache cacheThatWasSet = null;
@@ -134,12 +130,12 @@ namespace TlApiExampleTests.Services
             SetupHttpRequestService();
 
             // Act
-            AccountsResponseDTO accounts = await httpRequestService.GetAccountsAsync();
+            List<Account> accounts = await httpRequestService.GetAccountsAsync();
 
             // Assert
-            Assert.Equal(accounts.Accounts[0].AccountId,
+            Assert.Equal(accounts[0].AccountId,
                 dummyAccountsResponseDTO.Accounts[0].AccountId);
-            Assert.Equal(accounts.Accounts[1].AccountId,
+            Assert.Equal(accounts[1].AccountId,
                 dummyAccountsResponseDTO.Accounts[1].AccountId);
 
             Assert.Equal(cacheThatWasSet.AccountsResponseDTO.Accounts[0].AccountId,
@@ -152,8 +148,6 @@ namespace TlApiExampleTests.Services
         public async Task TestGetTransactionsWithoutCallingAccountsFirst()
         {
             // Arrange
-            mockCacheService.Setup(_ => _.GetCacheKey()).Returns(dummyCacheKey);
-
             int count = 0;
             mockCacheService.Setup(_ => _.GetCache())
                 .Returns(() => count++ <= 3 ? dummyCacheWithCodeAndAccessToken : dummyCacheWithAccounts);
@@ -187,8 +181,6 @@ namespace TlApiExampleTests.Services
         public async Task TestGetTransactionsAccountsAlreadyGot()
         {
             // Arrange
-            mockCacheService.Setup(_ => _.GetCacheKey()).Returns(dummyCacheKey);
-
             mockCacheService.Setup(_ => _.GetCache())
                 .Returns(dummyCacheWithAccounts);
 

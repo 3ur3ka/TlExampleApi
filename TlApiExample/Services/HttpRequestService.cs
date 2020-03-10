@@ -16,7 +16,7 @@ namespace TlApiExample.Services
     public interface IHttpRequestService
     {
         Task<bool> DoExchangeAsync(string code);
-        Task<AccountsResponseDTO> GetAccountsAsync();
+        Task<List<Account>> GetAccountsAsync();
         Task<List<Transaction>> GetTransactionsAsync();
         Task<List<AggregatedTransaction>> AggregateAsync();
     }
@@ -68,7 +68,7 @@ namespace TlApiExample.Services
         }
 
         // Get the users accounts
-        public async Task<AccountsResponseDTO> GetAccountsAsync()
+        public async Task<List<Account>> GetAccountsAsync()
         {
             string uri = _trueLayerCredentials.Value.BaseDataApiUrl + "/data/v1/accounts";
 
@@ -86,7 +86,7 @@ namespace TlApiExample.Services
 
             _cacheService.SetCache(cache);
 
-            return responseObj;
+            return responseObj.Accounts;
         }
 
         // Get some transactions
@@ -94,7 +94,7 @@ namespace TlApiExample.Services
         {
             List<Transaction> transactions = _cacheService.GetCache().Transactions;
 
-            if (transactions != null && transactions.Count > 0)
+            if (transactions.Count > 0)
             {
                 // The transactions have already been retrieved
                 return transactions;
@@ -106,7 +106,7 @@ namespace TlApiExample.Services
             // (Or if they are no accounts try and get them again.)
             if (accountsResponseDTO == null || accountsResponseDTO.Accounts.Count == 0)
             {
-                AccountsResponseDTO result = await GetAccountsAsync();
+                List<Account> result = await GetAccountsAsync();
 
                 if (result == null)
                     return null;

@@ -11,7 +11,6 @@ namespace TlApiExample.Services
     {
         Cache GetCache();
         void SetCache(Cache cache);
-        string GetCacheKey();
     }
 
     public class CacheService : ICacheService
@@ -41,7 +40,7 @@ namespace TlApiExample.Services
             _cache.SetString(GetCacheKey(), JsonConvert.SerializeObject(cache));
         }
 
-        public string GetCacheKey()
+        private string GetCacheKey()
         {
             // Get the logged in user Guid
             return _httpContextAccessor.HttpContext.User.Claims
