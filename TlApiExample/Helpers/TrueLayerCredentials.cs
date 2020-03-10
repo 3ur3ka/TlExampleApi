@@ -1,4 +1,4 @@
-﻿using System;
+﻿
 namespace TlApiExample.Helpers
 {
     public class TrueLayerCredentials
